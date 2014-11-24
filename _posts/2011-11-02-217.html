@@ -1,0 +1,41 @@
+---
+layout: post
+title: Customised UINavigationBar background in iOS 4 and 5
+date: 2011-11-02 23:19:08.000000000 +00:00
+categories:
+- Apple Programming
+- Mobile
+tags:
+- iOS
+- objective-c
+- UIKit
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '4005008'
+  _wp_old_slug: customised-uinavigationbar-background-in-ios-4-and-5
+  _wpas_done_twitter: '1'
+  tagazine-media: a:7:{s:7:"primary";s:0:"";s:6:"images";a:0:{}s:6:"videos";a:0:{}s:11:"image_count";s:1:"0";s:6:"author";s:7:"4005008";s:7:"blog_id";s:7:"7482100";s:9:"mod_stamp";s:19:"2011-11-02
+    22:23:43";}
+author: 
+---
+<p>Recently I came across the situation that I needed to support a custom background for a UINavigationBar in an app that had to work for both iOS 4 and iOS 5. After some Googling I came up with this approach.</p>
+<p>First the easy one, iOS 5;</p>
+<p>[sourcecode language="objc"]<br />
+if ([[UINavigationBar class] respondsToSelector:@selector(appearance)]) {<br />
+    [self.navigationController.navigationBar setBackgroundImage:navigationBackgroundImage forBarMetrics:UIBarMetricsDefault];<br />
+}<br />
+[/sourcecode]</p>
+<p>Note the test on the navigation bar class to check if it supports the UI proxy extensions. This must be done in iOS 4 otherwise a crash will result.</p>
+<p>Now for iOS 4 we have to create a category, fortunately this is very simple;</p>
+<p>[sourcecode language="objc"]<br />
+@implementation UINavigationBar (CustomBackground)</p>
+<p>- (void)drawRect:(CGRect)rect<br />
+{<br />
+    UIImage *navBackgroundImage = [[UIImage imageNamed:@&quot;navigation-background&quot;] stretchableImageWithLeftCapWidth:0.0 topCapHeight:0.0];<br />
+    [navBackgroundImage drawInRect:rect];<br />
+}</p>
+<p>@end<br />
+[/sourcecode]</p>
+<p>The <code>drawRect:</code> method is not called in iOS 5 so it is safe to leave this category in your app. Just as a small side note, Apple has deprecated <code>strechableImageLeftCapWidth:topCapHeight:</code> in iOS 5 in favour of <code>resizableImageWithCapInsets:</code>.</p>

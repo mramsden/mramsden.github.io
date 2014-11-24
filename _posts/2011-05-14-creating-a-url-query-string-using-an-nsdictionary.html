@@ -1,0 +1,67 @@
+---
+layout: post
+title: Creating a URL query string using an NSDictionary
+date: 2011-05-14 16:41:24.000000000 +01:00
+categories:
+- Apple Programming
+tags:
+- iOS
+- objective-c
+- osx
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '4005008'
+  _wpas_done_twitter: '1'
+author: Marcus Ramsden
+---
+<p>I finally got round to making this into a category. It's a simple function for turning a dictionary into a query string, ready for appending to the end of a URL.</p>
+<p>[sourcecode language="objc"]<br />
+// NSDictionary+QueryStringBuilder.h</p>
+<p>#import &lt;Foundation/Foundation.h&gt;</p>
+<p>@interface NSDictionary (QueryStringBuilder)</p>
+<p>- (NSString *)queryString;</p>
+<p>@end<br />
+[/sourcecode]</p>
+<p>[sourcecode language="objc"]<br />
+// NSDictionary+QueryStringBuilder.m</p>
+<p>NSString * escapeString(NSString *string)<br />
+{<br />
+  NSString *s = (NSString *)CFURLCreateStringByAddingPercentEscapes(NULL,<br />
+		  (CFStringRef)unencodedString,<br />
+		  NULL,<br />
+		  (CFStringRef)@&quot;!*'\&quot;();:@&amp;=+$,/?%#[]% &quot;,<br />
+		  kCFStringEncodingUTF8);<br />
+  return [s autorelease];<br />
+}</p>
+<p>@implementation NSDictionary (QueryStringBuilder)</p>
+<p>- (NSString *)queryString<br />
+{<br />
+    NSMutableString *queryString = nil;<br />
+    NSArray *keys = [self allKeys];</p>
+<p>    if ([keys count] &gt; 0) {<br />
+        for (id key in keys) {<br />
+            id value = [self objectForKey:key];<br />
+            if (nil == queryString) {<br />
+                queryString = [[[NSMutableString alloc] init] autorelease];<br />
+                [queryString appendFormat:@&quot;?&quot;];<br />
+            } else {<br />
+                [queryString appendFormat:@&quot;&amp;&quot;];<br />
+            }</p>
+<p>            if (nil != key &amp;&amp; nil != value) {<br />
+                [queryString appendFormat:@&quot;%@=%@&quot;, escapeString(key), escapeString(value)];<br />
+            } else if (nil != key) {<br />
+                [queryString appendFormat:@&quot;%@&quot;, escapeString(key)];<br />
+            }<br />
+    }</p>
+<p>    return queryString;<br />
+}</p>
+<p>@end<br />
+[/sourcecode]</p>
+<p>Using this category is very simple;</p>
+<p>[sourcecode language="objc"]<br />
+NSDictionary *queryParameters = [NSDictionary dictionaryWithValuesAndKeys:1, @&quot;page&quot;, nil, @&quot;enabled&quot;, 25, @&quot;size&quot;, nil];<br />
+[queryParameters queryString]; // This will return &quot;?page=1&amp;enabled&amp;size=25&quot;<br />
+[/sourcecode]</p>
+<p>You can get the sourcecode as a <a href="https://gist.github.com/972328">gist</a>.</p>

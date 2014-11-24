@@ -1,0 +1,81 @@
+---
+layout: post
+title: VirtualBox SDK Machine Status
+date: 2010-04-22 14:54:10.000000000 +01:00
+categories:
+- virtualbox
+tags:
+- conky
+- linux
+- python
+- virtualbox
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '4005008'
+  _wpas_done_twitter: '1'
+  _thumbnail_id: '189'
+author: Marcus Ramsden
+---
+<p><img src="assets/virtualbox.png" alt="" title="Virtualbox Post Logo" width="594" height="278" class="aligncenter size-full wp-image-189" /></p>
+<p>I have taken to using VirtualBox in my day to day development work. The reason for this is it provides a nicely isolated development sandbox which I can go ahead and clutter up with the usual tools, then when things go wrong I just have to trash the machine and clone from an existing image that I have pre-made. So far this has made life much easier for me.</p>
+<p>My preferred approach to running my machines is to start them up in headless mode and then shell into them using a static IP assigned through the VirtualBox host-only network. The only issue with using headless mode is that there is potentially no indication of the state of the machine, basically when can I shell into my machine? Since I was already using conky to report the status of my host machine I thought that I would add to my conkyrc so that I could see the state of play with regards to VirtualBox and the machines available to it.</p>
+<p>I decided to make use of the <a href="http://dlc.sun.com/virtualbox/vboxsdkdownload.html">VirtualBox Python SDK</a> to write a small application that can report on the status of my machines. The deb installation of VirtualBox supplied by Sun/Oracle contains the SDK as well, I am unsure if this is the case for the version of VirtualBox OSE available on the Ubuntu repositories. Also I don't know what the state of play is with other linux distributions. You may want to download the SDK anyway as this includes all of the documentation for using the API.</p>
+<p>So with that out the way onto the script that I created to report the status of my machines;<br />
+[sourcecode language="python"]<br />
+#!/usr/bin/env python<br />
+from vboxapi import VirtualBoxManager<br />
+import getopt<br />
+import sys</p>
+<p>opts, args = getopt.getopt(sys.argv[1:], &quot;&quot;, ['conky', 'vbox-version'])<br />
+useConky = False<br />
+for o, a in opts:<br />
+        if o == '--conky':<br />
+                useConky = True</p>
+<p>virtualBoxManager = VirtualBoxManager('XPCOM', None)<br />
+virtualBox = virtualBoxManager.vbox<br />
+for o, a in opts:<br />
+        if o == '--vbox-version':<br />
+                print virtualBox.version<br />
+                sys.exit(0)</p>
+<p>machines = virtualBox.getMachines()<br />
+for machine in machines:<br />
+        machineName = machine.name<br />
+        machineStatus = &quot;null&quot;<br />
+        machineStatuses = {<br />
+                0: 'null',<br />
+                1: '${color red}powered off$color' if useConky else 'powered off',<br />
+                2: '${color red}saved$color' if useConky else 'saved',<br />
+                3: '${color yellow}teleported$color' if useConky else 'teleported',<br />
+                4: '${color red}aborted$color' if useConky else 'aborted',<br />
+                5: '${color green}running$color' if useConky else 'running',<br />
+                6: '${color yellow}paused$color' if useConky else 'paused',<br />
+                7: '${color red}stuck$color' if useConky else 'stuck',<br />
+                8: '${color blue}teleporting$color' if useConky else 'teleporting',<br />
+                9: '${color blue}live snapshotting$color' if useConky else 'live snapshotting',<br />
+                10: '${color blue}starting$color' if useConky else 'starting',<br />
+                11: '${color blue}stopping$color' if useConky else 'stopping',<br />
+                12: '${color blue}saving$color' if useConky else 'saving',<br />
+                13: '${color blue}restoring$color' if useConky else 'restoring'<br />
+                 }<br />
+        machineStatus = machineStatuses.get(machine.state)<br />
+        print machineName, &quot;-&quot;, machineStatus<br />
+[/sourcecode]</p>
+<p>This script will accept the following arguments when executed;</p>
+<pre>
+virtualboxstatus [--conky] [--vbox-version]
+
+  --conky
+    Adds any additional colors for conky to render.
+
+  --vbox-version
+    Displays the installed version of VirtualBox then exits.
+</pre>
+<p>Once this script is made we just need to add it to our conkyrc in order to render the status of our machines. In my conkyrc I added the following;<br />
+[sourcecode]<br />
+${color red}VIRTUALBOX STATUS$color - Version ${execpi 600 ~/bin/virtualboxstatus --vbox-version}<br />
+${execpi 1 ~/bin/virtualboxstatus --conky}<br />
+[/sourcecode]</p>
+<p>Here's a screenshot of this script in action;<br />
+<a href="http://beyondtc.files.wordpress.com/2010/04/virtualboxstatus-screenshot.png"><img src="assets/virtualboxstatus-screenshot.png" alt="VirtualBox status in conky" title="virtualboxstatus-screenshot" width="220" height="63" class="alignnone size-full wp-image-89" /></a></p>

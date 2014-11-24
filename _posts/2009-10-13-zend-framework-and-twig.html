@@ -1,0 +1,171 @@
+---
+layout: post
+title: Zend Framework and Twig
+date: 2009-10-13 02:12:39.000000000 +01:00
+categories:
+- PHP
+tags:
+- PHP
+- twig
+- zend framework
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '4005008'
+  _wpas_skip_twitter: '1'
+  _oembed_e00c6d61560bdfefb8374d4c7b9390b2: '{{unknown}}'
+author: Marcus Ramsden
+---
+<p><strong>Update</strong> It looks like I should keep a closer eye on the mailing lists for new projects. Some people have already started to look into integrating Twig with the Zend Framework. The thread can be found in the group <a href="http://groups.google.com/group/twig-users/browse_thread/thread/41cf9e3cad767dad">here</a>.</p>
+<p>I have a small confession to make. Whilst I do love the Zend Framework I have been seeing other frameworks and indeed languages behind it's back. One of these frameworks include Django for Python. Admittedly every time I start up in a new framework I do always seem to come back to the Zend Framework fold but I guess that must be down to the fact that I just prefer PHP, it's where I feel comfortable.</p>
+<p>There was one feature that stuck with me about Django though, and that was it's template language. I found this to be very enjoyable to do, and to be honest in my view of things using PHP as my template language wasn't cutting it anymore in my books. I suspect that some people will strongly disagree with my arguments but then again this is what I feel is the beauty of PHP, there are so many tools out there that I can make them fit with my preferred style.</p>
+<p>Fortunately the Symfony crowd have come to the rescue with, what I think is, a nice little template language called <a href="http://www.twig-project.org/">Twig</a>. It resembles the style of templates found in Django with curly braces all over the place rather than PHP tags. Plus it lets you include blocks of templates in with other templates, this appealed to me because I found that [sourcecode language="php"]&lt;?php echo $this-&gt;render(&quot;view-file.phtml&quot;); ?&gt;[/sourcecode] was getting too much for me. Additionally since the template language is very similar in both form and function to the Django template language anyone coming over shouldn't have any problems settling in on the template front.</p>
+<p>I have been getting stuck into more features of the Zend Framework and thought that it would be fun to write an integration layer so that Twig can be used in Zend Framework. The solution I came up with works for default views and views contained inside modules.</p>
+<p>To start with I created a wrapper around the main Twig_Environment class. This class is responsible for loading a template and then rendering it with the supplied data.</p>
+<p>[sourcecode language="php"]<br />
+&lt;?php<br />
+class ZExt_Twig extends Zend_View_Abstract<br />
+{</p>
+<p>  private $_twig = null;</p>
+<p>  public function __construct($applicationRoot, $modulesDir = &quot;&quot;)<br />
+  {<br />
+    $twigLoader = new ZExt_Twig_Loader($applicationRoot, $modulesDir);<br />
+    $this-&gt;_twig = new Twig_Environment($twigLoader);<br />
+  }</p>
+<p>  protected function _run()<br />
+  {<br />
+    $template = func_get_arg(0);<br />
+    echo $template-&gt;render($this-&gt;getVars());<br />
+  }</p>
+<p>  protected function _script($name)<br />
+  {<br />
+    return $this-&gt;_twig-&gt;loadTemplate($name)<br />
+  }</p>
+<p>}<br />
+[/sourcecode]</p>
+<p>I will come onto the ZExt_Twig_Loader class shortly. The two methods _run and _script are both overriden methods from Zend_View_Abstract. These get called when the render method of the parent class get's called. The _script function is responsible for loading the appropriate Twig template and then returning it.<br />
+The _run method is called when we are ready to hand off to the Twig rendering engine. The first argument to this method should be the template object that was returned by the _script method. Note that when the render method is being called we are passing in an array of any data that might have been assigned to the view.</p>
+<p>Next the ZExt_Twig_Loader class is responsible for loading the appropriate template file from the standard Zend Framework application directory structure.</p>
+<p>[sourcecode language="php"]<br />
+&lt;?php<br />
+class ZExt_Twig_Loader extends Twig_Loader<br />
+{</p>
+<p>	/**<br />
+	 * @var string<br />
+	 */<br />
+	private $_applicationRoot = null;</p>
+<p>	/**<br />
+	 * @var string<br />
+	 */<br />
+	private $_modulesDir = null;</p>
+<p>	/**<br />
+	 * @var string<br />
+	 */<br />
+	private $_viewsDir = null;</p>
+<p>	/**<br />
+	 * Constructor.<br />
+	 *<br />
+	 * @param string	$applicationRoot The application root.<br />
+	 * @param string	$modulesDir The directory where all modules are found.<br />
+	 * @param string	$viewsDir The path where views should be located in both the application root and<br />
+	 * modules directory.<br />
+	 * @param string 	$cache The compiler cache directory.<br />
+	 * @param boolean	$autoReload Whether to reload the template if the orginal source changed.<br />
+	 *<br />
+	 * @see Twig_Loader<br />
+	 */<br />
+	public function __construct($applicationRoot, $modulesDir, $viewsDir = &quot;/views/scripts&quot;,<br />
+		$cache = null, $autoReload = true)<br />
+	{<br />
+		$this-&gt;setApplicationRoot($applicationRoot);<br />
+		$this-&gt;setModulesDir($modulesDir);<br />
+		$this-&gt;setViewsDir($viewsDir);</p>
+<p>		parent::__construct($cache, $autoReload);<br />
+	}</p>
+<p>	/**<br />
+	 * Returns the source of the next view to load based on the supplied name.<br />
+	 * The name in this instance should take the form 'module/controller/action',<br />
+	 * 'controller/action', or just 'action'.<br />
+	 *<br />
+	 * @param string	$name The view to load.<br />
+	 *<br />
+	 * @return array An array consisting of the source code as the first element, and<br />
+	 * the last modification time as the second one or false if it's not relevant.<br />
+	 */<br />
+	public function getSource($name)<br />
+	{<br />
+		$name = $this-&gt;_parseName($name);<br />
+		$templateFilePath = $this-&gt;getApplicationRoot();<br />
+		if (!is_null($name['module']))<br />
+		{<br />
+			$templateFilePath .= DIRECTORY_SEPARATOR.$name['module'];<br />
+		}<br />
+		$templateFilePath .= DIRECTORY_SEPARATOR.$this-&gt;getViewsDir();<br />
+		$templateFilePath .= DIRECTORY_SEPARATOR.$name['controller'].DIRECTORY_SEPARATOR.$name['action'].$name['extension'];</p>
+<p>		if (!file_exists($templateFilePath))<br />
+		{<br />
+			throw new Zend_Exception(&quot;The template file $templateFilePath does not exist.&quot;);<br />
+		}</p>
+<p>		error_log($templateFilePath);<br />
+		return array(file_get_contents($templateFilePath), filemtime($templateFilePath));</p>
+<p>	}</p>
+<p>	public function getViewsDir()<br />
+	{<br />
+		return $this-&gt;_viewsDir;<br />
+	}</p>
+<p>	public function setViewsDir($viewsDir)<br />
+	{<br />
+		$this-&gt;_viewsDir = $viewsDir;<br />
+	}</p>
+<p>	public function getApplicationRoot()<br />
+	{<br />
+		return $this-&gt;_applicationRoot;<br />
+	}</p>
+<p>	public function setApplicationRoot($applicationRoot)<br />
+	{<br />
+		$this-&gt;_applicationRoot = $applicationRoot;<br />
+	}</p>
+<p>	public function getModulesDir()<br />
+	{<br />
+		return $this-&gt;_modulesDir;<br />
+	}</p>
+<p>	public function setModulesDir($modulesDir)<br />
+	{<br />
+		$this-&gt;_modulesDir = $modulesDir;<br />
+	}</p>
+<p>	private function _parseName($name)<br />
+	{<br />
+		$matches = array();<br />
+		preg_match(&quot;/(\..*)$/&quot;, $name, $matches);<br />
+		$name = substr($name, 0, strpos($name, $matches[1]));<br />
+		$parsedName = array('module' =&gt; null, 'controller' =&gt; 'index', 'action' =&gt; 'index', 'extension' =&gt; $matches[1]);<br />
+		$parts = split(&quot;/&quot;, $name);<br />
+		switch (sizeof($parts))<br />
+		{<br />
+			case 3:<br />
+				$parsedName['module'] = array_shift($parts);<br />
+			case 2:<br />
+				$parsedName['controller'] = array_shift($parts);<br />
+			case 1:<br />
+				$parsedName['action'] = array_shift($parts);<br />
+		}</p>
+<p>		return $parsedName;<br />
+	}<br />
+}<br />
+[/sourcecode]</p>
+<p>The main method of interest from this class is ZExt_Twig_Loader::getSource. This method is called by the Twig environment when ZExt_Twig::loadTemplate is called. This function then parses the file name passed to it and returns an array containing an array of all the lines in the template file and the time the file was last modified. The template is then parsed by the Twig template engine.</p>
+<p>Finally to get this all working I added the following function to the bootstrap</p>
+<p>[sourcecode language="php"]<br />
+public function _initTwigView()<br />
+{<br />
+	$twigView = new ZExt_Twig(APPLICATION_PATH, APPLICATION_PATH.&quot;/modules&quot;);<br />
+	$viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper(&quot;ViewRenderer&quot;);<br />
+	$viewRenderer-&gt;setView($twigView);</p>
+<p>	return $twigView;<br />
+}<br />
+[/sourcecode]</p>
+<p>This now means that a Twig template view will be loaded instead of the default Zend_View style template.</p>
+<p>There are still a few aspects I have to try out with this approach such as the availability of view helpers and whether I can include other templates using the Twig engine syntax, or if I will still have to use Zend Framework helpers to achieve this. Finally I need to tidy up some of the method signatures as there are some such as the ZExt_Twig_Loader constructor that have parameters which cannot be assigned.</p>
+<p>All of the code in this article is available on <a href="http://gist.github.com/264227">GitHub</a>.</p>
+<p>Any suggestions for improvements would be appreciated :)</p>

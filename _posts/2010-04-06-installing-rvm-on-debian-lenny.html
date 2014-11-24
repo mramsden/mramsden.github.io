@@ -1,0 +1,50 @@
+---
+layout: post
+title: Installing RVM on Debian Lenny
+date: 2010-04-06 19:37:21.000000000 +01:00
+categories:
+- ruby
+tags:
+- debian
+- ruby
+- rvm
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '4005008'
+  _wpas_done_twitter: '1'
+author: Marcus Ramsden
+---
+<p>My work has seen me doing a lot of work in ruby recently and more specifically in rails. I recently have been making a lot of use of <a href="http://rvm.beginrescueend.com">Ruby Version Manager (RVM)</a>. This is a little gem (pun intended) and allows you to easily install multiple versions of ruby, and manage multiple sets of gems for each of these ruby installations. All in all a very nifty little gem and has saved me a huge amount of time. I primarily setup my development environments on throw away virtual machines so that I don't end up hosing my actual computer.</p>
+<p>Currently my OS of choice for my VMs is Debian Lenny. This is a rundown of the commands that need to get up and running with rvm.</p>
+<p><em><br />
+Edit<br />
+Rather then taking this "gem install" approach you can just run;</p>
+<blockquote><p>bash &lt; &lt;(curl http://rvm.beginrescueend.com/releases/rvm-install-latest)</p></blockquote>
+<p>Thanks to Wayne for the really quick comment :)<br />
+</em></p>
+<p>First start off by install ruby and rubygems from the Debian repositories;</p>
+<blockquote><p>apt-get install ruby rubygems</p></blockquote>
+<p>Once this is done I like to make sure that I have the latest version of rubygems, this is done through the handy rubygems-update gem since the Debian rubygems package disables <code>gem update --system</code>;</p>
+<blockquote><p>
+gem install rubygems-update<br />
+/var/lib/gems/1.8/bin/update_rubygems
+</p></blockquote>
+<p>Once this is complete you now need to install rvm;</p>
+<blockquote><p>gem install rvm</p></blockquote>
+<p>The next step after installing the rvm gem is to finalise the installation by running the <code>rvm-install</code> command. Depending on your setup you may be able to run this directly if the rubygems bin directory is on your path. If not then you will need to run;</p>
+<blockquote><p>/var/lib/gems/1.8/bin/rvm-install</p></blockquote>
+<p>Now we need to follow the final setup phase for rvm which is given to us by <code>rvm-install</code>. In <code>/home/&lt;username&gt;/.bashrc</code> you need to comment out the line <code>[ -z "$PS1" ] &amp;&amp; return</code> and add the following code to the end of the file;</p>
+<blockquote><p>
+if [[ -s /home/&lt;username&gt;/.rvm/scripts/rvm ]]; then<br />
+&nbsp;&nbsp;source /home/&lt;username&gt;/.rvm/scripts/rvm<br />
+fi
+</p></blockquote>
+<p>Once this is done you will need to logout of your shell and back in again for the settings to take effect. If you run <code>rvm list</code> you should now see that you have no rvm managed versions of ruby installed and then there is the system version which is what aptitude installed for us. Also a warning about the command <code>file</code> not being found. This is solved by;</p>
+<blockquote><p>apt-get install file</p></blockquote>
+<p>Now before installing an rvm managed version of ruby there are a final few dependencies that need to be installed;</p>
+<blockquote><p>apt-get install build-essential curl zlib1g-dev libreadline5-dev libxml2-dev libsqlite3-dev</p></blockquote>
+<p>Then all you need to do is run;</p>
+<blockquote><p>rvm install 1.8.7</p></blockquote>
+<p>You now have a ruby environment setup as I set mine up ready for use. One thing to note is that to install gems you should use <code>rvmsudo</code> rather then <code>sudo</code>.</p>

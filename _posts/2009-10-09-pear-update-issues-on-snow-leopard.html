@@ -1,0 +1,35 @@
+---
+layout: post
+title: PEAR Update Issues On Snow Leopard
+date: 2009-10-09 13:39:13.000000000 +01:00
+categories:
+- PHP
+tags:
+- osx
+- pear
+- snow leopard
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '4005008'
+author: Marcus Ramsden
+---
+<p>So I just came across some weirdness on my default install of PHP on Snow Leopard. I wanted to install the latest version of PHPUnit in order to carry out some testing, but it was asking me to update PEAR. </p>
+<p>So I ran the usual PEAR update command;<br />
+[code language="shell"]<br />
+$ sudo pear upgrade pear<br />
+[/code]</p>
+<p>This appeared to run without any issues. But subsequently whenever I attempted to run PEAR I was greeted with the following error message;<br />
+[code language="shell"]<br />
+/usr/local/bin/pear: fork: Resource temporarily unavailable<br />
+[/code]</p>
+<p>I took a look inside the offending file as it is just a simple command to run the PEAR script. It looked like this;<br />
+[code language="shell"]<br />
+pear /usr/lib/php/pearcmd.php<br />
+[/code]</p>
+<p>Obviously the script was infinitely attempting to spawn itself causing the resource temporarily unavailable error. So the simple fix was to change the script to the following;<br />
+[code language="shell"]<br />
+php /usr/lib/php/pearcmd.php $@<br />
+[/code]</p>
+<p>I'm not quite sure why the script changed when I upgraded but it appeared to. I figured I should pop this note up in case anyone else gets caught out, or indeed I forget and get caught out again. Any insight on why this might have happened would be appreciated.</p>

@@ -1,0 +1,188 @@
+---
+layout: post
+title: Android development on OS X without Eclipse
+date: 2011-01-15 23:56:45.000000000 +00:00
+categories:
+- Mobile
+tags:
+- android
+- homebrew
+- java
+- osx
+status: publish
+type: post
+published: true
+meta:
+  _thumbnail_id: '187'
+  _edit_last: '4005008'
+  _wpas_done_twitter: '1'
+  tagazine-media: a:7:{s:7:"primary";s:55:"http://beyondtc.files.wordpress.com/2011/01/android.png";s:6:"images";a:1:{s:55:"http://beyondtc.files.wordpress.com/2011/01/android.png";a:6:{s:8:"file_url";s:55:"http://beyondtc.files.wordpress.com/2011/01/android.png";s:5:"width";s:3:"640";s:6:"height";s:3:"300";s:4:"type";s:5:"image";s:4:"area";s:6:"192000";s:9:"file_path";s:0:"";}}s:6:"videos";a:0:{}s:11:"image_count";s:1:"1";s:6:"author";s:7:"4005008";s:7:"blog_id";s:7:"7482100";s:9:"mod_stamp";s:19:"2011-02-08
+    22:29:27";}
+  _oembed_1b2b9c6b525880c420584505a48925f8: '{{unknown}}'
+  _oembed_5aba62f7c455e1609c053ad361a5d3d1: '{{unknown}}'
+  _oembed_db1d30b32e1bf28dd1fb79484328394d: '{{unknown}}'
+author: Marcus Ramsden
+---
+<h4>Introduction</h4>
+<p>I am finally getting started with playing around with some Android development and the first order of business is getting my development environment set up. I'm going to be doing most of my development on OS X using Apache Maven and Textmate, of course in your situation you could use your favourite text editor, I side more with vim fans ;) I'm making the assumption that the reader is comfortable with the terminal, additionally a dosage of no fear if you are following these steps.</p>
+<h4>Homebrew</h4>
+<p>To get the ball rolling we're going to start with everyone's favourite missing package manager, <a href="http://mxcl.github.com/homebrew/">Homebrew</a>. If you haven't got Homebrew installed already then you'll be glad to know that installation is pretty simple to do;</p>
+<p>[sourcecode language="bash" light="true"]<br />
+ruby -e &quot;$(curl -fsSLk https://gist.github.com/raw/323731/install_homebrew.rb)&quot;<br />
+[/sourcecode]</p>
+<p>If you haven't got Xcode installed yet this script will install it for you. If this is the case you may want to go get a drink as it may take some time.</p>
+<h4>Android SDK</h4>
+<p>Now that we have Homebrew installed we can get the Android SDK tools installed. Thanks to Homebrew this is a simple process and you don't even have to visit a website, this appeals to the exceedingly lazy developer in me. Just go ahead and run;</p>
+<p>[sourcecode language="bash" light="true"]<br />
+brew install android<br />
+[/sourcecode]</p>
+<p>Once Homebrew has installed the Android SDK you can just straight away run the android command thanks to Homebrew setting everything up for you. So go ahead and run the Android SDK and AVD manager by running <code>android</code> on the command line. Then you can make your AVD and install the desired versions of the Android SDK. You may need to update your android tools since it appears that the Homebrew formula is a little out of date with the current version, but this is simple enough to do.</p>
+<p>At this point let's create an android project to make sure that everything is ready to go. I created a HelloAndroid application targeted for Android 2.1;<br />
+[sourcecode language="bash" light="true"]<br />
+android create project --package com.example.helloandroid \<br />
+  --activity HelloAndroid \<br />
+  --target 3 \<br />
+  --path &lt;path-to-project-folder&gt;/HelloAndroid<br />
+[/sourcecode]</p>
+<p>Then to make sure that everything is set up right and working fire up your Android emulator and then run <code>ant install</code>. Once this is done go ahead and make sure the app runs on the emulator. Assuming this works then run <code>ant uninstall</code> to uninstall the app from the emulator.</p>
+<h4>Apache Maven</h4>
+<p>Whilst I do prefer to avoid a full blown IDE I do like some automation in places and Apache Maven is a big old help with this. The first thing to do is get maven installed, again thanks to Homebrew this is simple;<br />
+[sourcecode language="bash"]<br />
+brew install maven<br />
+[/sourcecode]</p>
+<p>Now we need to get the project set up with maven. We will be using the <a href="http://code.google.com/p/maven-android-plugin">Maven Android Plugin</a> to help us out. The first thing we need to do is remove the following files;<br />
+[sourcecode language="bash" light="true"]<br />
+rm -r bin build.xml build.properties libs<br />
+[/sourcecode]</p>
+<p>Next we setup our environment for the Maven Android Plugin. We need to set a <code>ANDROID_HOME</code> environment variable. In .bash_profile add the following line;<br />
+[sourcecode language="bash" light="true"]<br />
+export ANDROID_HOME=`brew --prefix android`<br />
+[/sourcecode]</p>
+<p>Setting up the project for use with maven needs the following <code>pom.xml</code> file created in the root of the project;<br />
+[sourcecode language="xml"]<br />
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;<br />
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;<br />
+  xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;<br />
+  xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd&quot;&gt;<br />
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;<br />
+  &lt;groupId&gt;com.example.helloandroid&lt;/groupId&gt;<br />
+  &lt;artifactId&gt;helloandroid&lt;/artifactId&gt;<br />
+  &lt;packaging&gt;apk&lt;/packaging&gt;<br />
+  &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;<br />
+  &lt;name&gt;HelloAndroid&lt;/name&gt;</p>
+<p>  &lt;dependencies&gt;<br />
+    &lt;dependency&gt;<br />
+      &lt;groupId&gt;com.google.android&lt;/groupId&gt;<br />
+      &lt;artifactId&gt;android&lt;/artifactId&gt;<br />
+      &lt;version&gt;2.1.2&lt;/version&gt;<br />
+      &lt;scope&gt;provided&lt;/scope&gt;<br />
+    &lt;/dependency&gt;<br />
+  &lt;/dependencies&gt;</p>
+<p>  &lt;build&gt;<br />
+    &lt;sourceDirectory&gt;src&lt;/sourceDirectory&gt;<br />
+    &lt;plugins&gt;<br />
+      &lt;plugin&gt;<br />
+        &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;<br />
+        &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;<br />
+        &lt;configuration&gt;<br />
+          &lt;source&gt;1.6&lt;/source&gt;<br />
+          &lt;target&gt;1.6&lt;/target&gt;<br />
+        &lt;/configuration&gt;<br />
+      &lt;/plugin&gt;<br />
+      &lt;plugin&gt;<br />
+        &lt;groupId&gt;com.jayway.maven.plugins.android.generation2&lt;/groupId&gt;<br />
+        &lt;artifactId&gt;maven-android-plugin&lt;/artifactId&gt;<br />
+        &lt;configuration&gt;<br />
+          &lt;sdk&gt;<br />
+            &lt;path&gt;${env.ANDROID_HOME}&lt;/path&gt;<br />
+            &lt;platform&gt;1.6&lt;/platform&gt;<br />
+          &lt;/sdk&gt;<br />
+          &lt;emulator&gt;<br />
+             &lt;avd&gt;standard&lt;/avd&gt;<br />
+             &lt;wait&gt;6000&lt;/wait&gt;<br />
+          &lt;/emulator&gt;<br />
+          &lt;deleteConflictingFiles&gt;true&lt;/deleteConflictingFiles&gt;<br />
+        &lt;/configuration&gt;<br />
+        &lt;extensions&gt;true&lt;/extensions&gt;<br />
+      &lt;/plugin&gt;<br />
+    &lt;/plugins&gt;<br />
+  &lt;/build&gt;</p>
+<p>&lt;/project&gt;<br />
+[/sourcecode]</p>
+<p>Once the <code>pom.xml</code> file is created then we can see if it is all set up right by running;<br />
+[sourcecode language="bash"]<br />
+mvn help:describe -Dplugin=android<br />
+[/sourcecode]</p>
+<p>Running this should give details about goals available for the android maven plugin. For reference here are the goals;<br />
+[sourcecode light="true" highlight="10,15,21,30,33,37,41,53,56,62,68,71,74,78,82,85"]<br />
+Name: Maven Android Plugin - maven-android-plugin<br />
+Description: Maven Plugin for Android<br />
+Group Id: com.jayway.maven.plugins.android.generation2<br />
+Artifact Id: maven-android-plugin<br />
+Version: 2.8.3<br />
+Goal Prefix: android</p>
+<p>This plugin has 16 goals:</p>
+<p>android:apk<br />
+  Description: Creates the apk file. By default signs it with debug keystore.<br />
+    Change that by setting configuration parameter<br />
+    &lt;sign&gt;&lt;debug&gt;false&lt;/debug&gt;&lt;/sign&gt;.</p>
+<p>android:deploy<br />
+  Description: Deploys the built apk file, or another specified apk, to a<br />
+    connected device.<br />
+    Automatically performed when running mvn integration-test (or mvn install)<br />
+    on a project with instrumentation tests.</p>
+<p>android:deploy-dependencies<br />
+  Description: Deploys all directly declared dependencies of &lt;type&gt;apk&lt;/type&gt;<br />
+    in this project's pom.<br />
+    Usually used in a project with instrumentation tests, to deploy the apk to<br />
+    test onto the device before running the deploying and running the<br />
+    instrumentation tests apk.<br />
+    Automatically performed when running mvn integration-test (or mvn install)<br />
+    on a project with instrumentation tests.</p>
+<p>android:dex<br />
+  Description: Converts compiled Java classes to the Android dex format.</p>
+<p>android:emulator-start<br />
+  Description: EmulatorStartMojo can start the Android Emulator with a<br />
+    specified Android Virtual Device (avd).</p>
+<p>android:emulator-stop<br />
+  Description: EmulatorStartMojo can stop the Android Emulator with a<br />
+    specified Android Virtual Device (avd).</p>
+<p>android:generate-sources<br />
+  Description: Generates R.java based on resources specified by the resources<br />
+    configuration parameter.<br />
+    Generates java files based on aidl files.</p>
+<p>    If the configuration parameter deleteConflictingFiles is true (which it is<br />
+    by default), this goal has the following side-effects:<br />
+    - deletes any R.java files found in the source directory.<br />
+    - deletes any .java files with the same name as an .aidl file found in the<br />
+      source directory.<br />
+    - deletes any Thumbs.db files found in the resource directory.</p>
+<p>android:instrument<br />
+  Description: Runs the instrumentation apk on device.</p>
+<p>android:internal-integration-test<br />
+  Description: Internal. Do not use.<br />
+    Called automatically when the lifecycle reaches phase integration-test.<br />
+    Figures out whether to call goals in this phase; and if so, calls<br />
+    android:instrument.</p>
+<p>android:internal-pre-integration-test<br />
+  Description: Internal. Do not use.<br />
+    Called automatically when the lifecycle reaches phase pre-integration-test.<br />
+    Figures out whether to call goals in this phase; and if so, calls<br />
+    android:deploy-dependencies and android:deploy.</p>
+<p>android:pull<br />
+  Description: Copy file/dir from device.</p>
+<p>android:push<br />
+  Description: Copy file/dir to device.</p>
+<p>android:redeploy<br />
+  Description: Redeploys the built apk file, or another specified apk, to a<br />
+    connected device. This simply tries to undeploy the APK and re-deploy it.</p>
+<p>android:undeploy<br />
+  Description: Undeploys the built apk file, or another specified apk, from a<br />
+    connected device.</p>
+<p>android:unpack<br />
+  Description: unpack library.</p>
+<p>android:zipalign<br />
+  Description: ZipalignMojo can run the zipalign command against the apk.<br />
+[/sourcecode]</p>
+<p>If you see that then you are all set and ready to go. I'm hoping to get some more blog posts up about my development exploits on android. If you want to read more about the maven android plugin then have a look at their website <a href="http://code.google.com/p/maven-android-plugin">http://code.google.com/p/maven-android-plugin</a>.</p>
+<p><strong>Update 1:</strong> I did have some troubles with the <code>android:emulator-start</code> goal. But it turned out I had missed the emulator block in the maven-android-plugin configuration block. Found this information in <a href="http://www.sonatype.com/books/mvnref-book/reference/android-dev-sect-custom-details.html">Sonatype's Maven Reference Guide</a>. Also I corrected a typo in the pom.xml definition.</p>
