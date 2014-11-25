@@ -17,20 +17,20 @@ avatar: http://s.gravatar.com/avatar/37e58a68398752b5f8db87172bbe6046
 
 # Includes an icon in the footer for each username you enter
 footer-links:
-  dribbble: 
-  email: 
-  facebook: 
-  flickr: 
+  dribbble:
+  email:
+  facebook:
+  flickr:
   github: mramsden
-  instagram: 
+  instagram:
   linkedin: marcusramsden
-  pinterest: 
+  pinterest:
   rss: # just type anything here for a working RSS icon, make sure you set the "url" above!
   twitter: m_ramsden
   stackoverflow: users/425519/marcus-ramsden
 
 # Your disqus shortname, entering this will enable commenting on posts
-disqus: 
+disqus:
 
 # Enter your Google Analytics web tracking code (e.g. UA-2110908-2) to activate tracking
 google_analytics: UA-57070630-1
@@ -39,7 +39,7 @@ google_analytics: UA-57070630-1
 # Used for Sitemap.xml and your RSS feed
 url: http://mramsden.github.io
 
-# If you're hosting your site at a Project repository on GitHub pages 
+# If you're hosting your site at a Project repository on GitHub pages
 # (http://yourusername.github.io/repository-name)
 # and NOT your User repository (http://yourusername.github.io)
 # then add in the baseurl here, like this: "/repository-name"
@@ -72,3 +72,5 @@ exclude:
     - Gemfile.lock
     - LICENSE
     - README.md
+
+excerpt_separator: ""
